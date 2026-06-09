@@ -8,20 +8,7 @@
 
 ---
 
-## Step 1 — Clone / copy the project
-
-```bash
-# If you cloned from GitHub:
-git clone https://github.com/yourname/nsei-pipeline
-cd nsei-pipeline
-
-# If you have the folder already:
-cd nsei_pipeline
-```
-
----
-
-## Step 2 — Create the missing local folders
+## Step 1 — Create the missing local folders
 
 ```bash
 mkdir -p logs data
