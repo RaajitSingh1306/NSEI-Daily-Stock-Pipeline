@@ -4,7 +4,7 @@ End-to-end data engineering pipeline: **NSE India API → S3 → PySpark → Duc
 
 ## Architecture
 
-```
+```Markdown
 [NSE/yfinance API]
        │
        ▼ (Airflow: ingest_nsei_data)
@@ -34,9 +34,21 @@ End-to-end data engineering pipeline: **NSE India API → S3 → PySpark → Duc
  marts.mart_sector_performance     ← sector-level aggregation + breadth
 ```
 
+```mermaid
+graph LR
+    A[NSE / yfinance] -->|OHLCV JSON| B[Airflow DAG]
+    B -->|raw parquet| C[(S3 raw layer)]
+    C -->|PySpark transform| D[(S3 processed layer)]
+    D -->|DuckDB COPY| E[(DuckDB warehouse)]
+    E -->|dbt staging views| F[stg_nsei_daily]
+    F -->|dbt mart tables| G[mart_nsei_rolling_metrics]
+    F -->|dbt mart tables| H[mart_sector_performance]
+    G --> I[ML Feature Store]
+```
+
 ## Project Structure
 
-```
+``` Markdown
 nsei_pipeline/
 ├── dags/
 │   └── nsei_pipeline_dag.py       # Airflow DAG
