@@ -52,7 +52,10 @@ DBT_PROFILES_DIR   = "/opt/dbt"
 #     return "skip_non_trading_day"
 
 def check_market_day(**context) -> str:
+    # NOTE: market-day filtering bypassed for local dev.
+    # Uncomment the block above for production to skip non-trading days.
     return "ingest_nsei_data"
+
 
 def ingest_nsei_data(**context):
     import io
