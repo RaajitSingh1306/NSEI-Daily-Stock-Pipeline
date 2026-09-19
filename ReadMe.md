@@ -138,6 +138,22 @@ NSEI Daily Stock Pipeline/
 
 ---
 
+## Results
+
+Execution across the full pipeline generates production-grade, analytically modeled marts with guaranteed schema integrity:
+
+- **Rolling Metrics Mart (`mart_nsei_rolling_metrics`)**:
+  - Scales to ~18,000 observations per year across the Nifty 50 universe.
+  - Generates engineered quantitative indicators per symbol/date: `symbol`, `trade_date`, `vol_regime` (Low/Medium/High mapped from rolling percentiles), `sharpe_20d`, `drawdown_from_20d_high`, and realized volatility windows.
+- **Sector Performance Mart (`mart_sector_performance`)**:
+  - Aggregates daily sector-level cross-sectional dynamics: `sector_name`, `daily_sector_return`, `breadth_pct` (% of constituent equities closing above their 20-day SMA), and `daily_sector_rank`.
+- **Pipeline Execution Performance**:
+  - End-to-end daily run completed in **3–5 minutes** on local Docker resources (dominated by Yahoo Finance API throttle delays and PySpark JVM startup).
+- **dbt Data Quality Verification**:
+  - 100% test pass rate across dbt test suite: primary key uniqueness on `(symbol, trade_date)`, not-null constraints across all numeric return columns, and referential integrity joining staging views against sector seed mappings.
+
+---
+
 ## Where & How to Start (Local Setup)
 
 ### Prerequisites
@@ -287,6 +303,25 @@ docker compose down -v
 
 * **[Volatility Intelligence Platform](https://github.com/RaajitSingh1306/volatility-intelligence-platform)**: Consumes the rolling volatility and drawdown metrics generated in `marts.mart_nsei_rolling_metrics` as upstream features.
 * **[Nifty Sector Rotation](https://github.com/RaajitSingh1306/Nifty-Sector-Rotation)**: Directly utilizes the cross-sectional breadth and sector return aggregations computed in `marts.mart_sector_performance`.
+
+---
+
+## Limitations & Roadmap
+
+### Known Limitations
+- **Upstream Data Dependency**: Relies on Yahoo Finance via `yfinance`, which is subject to rate-limiting, missing corporate actions, and intermittent ticker throttling.
+- **LocalStack S3 Emulation**: Storage runs on local Docker LocalStack; not currently provisioned directly on production AWS IAM and managed S3 buckets.
+- **Full Partition Replacement**: While backfills are idempotent via atomic partition replacement, the pipeline does not implement change data capture (CDC) for intraday adjustments.
+- **Daily Grain Only**: Data is processed at daily close granularity; high-frequency order-book and tick data are not supported.
+- **Single-Node Spark**: PySpark executes in local containerized mode (`local[*]`) rather than across an elastic multi-node Spark cluster (e.g. AWS EMR or Databricks).
+- **Manual Triggering**: Orchestration DAG runs manually or via scheduled cron in Docker Airflow; external market holiday calendars are not dynamically queried.
+
+### Roadmap
+- [ ] **Direct Exchange API Ingestion**: Add integration with Zerodha Kite Connect or NSE official data feeds for authoritative exchange tick/EOD files.
+- [ ] **Cloud-Native Deployment**: Deploy Terraform scripts for automated provisioning to AWS (EMR Serverless, S3, RDS Postgres for Airflow metastore).
+- [ ] **CI/CD Data Testing Gate**: Automate dbt test and Great Expectations validation within GitHub Actions CI.
+- [ ] **Intraday 5-Minute Mart**: Introduce intraday interval aggregation models for real-time volatility tracking during active trading hours.
+- [ ] **Automated Backfill Sensor**: Add an Airflow sensor to automatically detect missing historical partitions and trigger self-healing backfills.
 
 ---
 
