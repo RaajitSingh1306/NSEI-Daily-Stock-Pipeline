@@ -1,0 +1,11 @@
+nsei_pipeline:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: /opt/warehouse/nsei.duckdb
+      threads: 4
+    prod:
+      type: duckdb
+      path: /opt/warehouse/nsei.duckdb
+      threads: 8
